@@ -2,7 +2,6 @@ local has_telescope, telescope = pcall(require, "telescope")
 
 if not has_telescope then
   error("This plugins requires nvim-telescope/telescope.nvim")
-  return
 end
 
 local cmdline = require('cmdline')
@@ -46,20 +45,20 @@ end
 
 local make_picker = function(opts)
   local c = assert(config.get(), "No config found")
+
   return pickers.new(c.picker, {
     prompt_title = "Cmdline",
     prompt_prefix = " : ",
     finder = make_finder(c),
     sorter = sorter(opts),
-    attach_mappings = function(_, map)
-      -- Autocomplete using <Tab>
-      map("i", c.mappings.complete, action.complete_input)
-      -- Run selection with <CR>
-      map("i", c.mappings.run_selection, action.run_selection)
-      -- Run command from input field with <C-CR> (special cases) ??
-      map("i", c.mappings.run_input, action.run_input)
+    attach_mappings = function(bufnr, map)
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd('setlocal keymap=')
+      end)
+      map("i", c.mappings.complete, action.complete_input)     -- <Tab>
+      map("i", c.mappings.run_input, action.run_input)         -- <CR>
+      map("i", c.mappings.run_selection, action.run_selection) -- <C-CR>
       map("i", "<C-e>", action.edit)
-
       require("telescope.actions").close:enhance {
         post = function()
           cmdline.preview.clean(vim.api.nvim_win_get_buf(0))
@@ -83,18 +82,13 @@ local cmdline_visual = function(opts)
   picker:set_prompt("'<,'> ")
 end
 
--- Telescope extension setup
--- NOTE: It's loads the extension twice (https://github.com/nvim-telescope/telescope.nvim/issues/2659)
-local setup = function(ext_config, user_config)
-  if vim.fn.has('nvim-0.10') == 0 then
-    vim.notify('Cmdline requires Neovim 0.10.0 or higher', vim.log.levels.ERROR, {})
-  end
-
-  require("cmdline.config").set_defaults(ext_config)
-end
-
 return telescope.register_extension({
-  setup   = setup,
+  setup   = function(ext_config, user_config)
+    if vim.fn.has('nvim-0.10') == 0 then
+      vim.notify('Cmdline extension requires Neovim 0.10 or higher', vim.log.levels.ERROR, {})
+    end
+    require("cmdline.config").set_defaults(ext_config)
+  end,
   exports = {
     cmdline = telescope_cmdline,
     visual  = cmdline_visual,
