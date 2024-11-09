@@ -5,6 +5,9 @@ local action_state = require("telescope.actions.state")
 
 -- Get selected input from prompt
 local get_user_input = function(prompt_bufnr)
+  vim.api.nvim_buf_call(prompt_bufnr, function()
+      vim.cmd('set keymap=')
+  end)
   local picker = action_state.get_current_picker(prompt_bufnr)
   local lines = vim.api.nvim_buf_get_lines(prompt_bufnr, 0, -1, false)
   if #lines == 0 then return "" end
