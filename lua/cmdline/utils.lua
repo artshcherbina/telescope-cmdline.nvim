@@ -22,7 +22,8 @@ end
 -- Prints command output in split view
 -- @param lines table: list of lines to print
 M.print_output = function(lines, max_height)
-  vim.cmd.split()
+  -- vim.cmd.split()
+  vim.cmd('belowright split')
   local win = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_create_buf(true, true)
   vim.opt_local.number = false
